@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Job</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+
+  <form id="jobForm">
+    <div class="row g-3">
+
+      <!-- Client details -->
+      <div class="col-md-6">
+        <h5>Client details</h5>
+        <input type="text" class="form-control mb-2" name="first_name" placeholder="First name" required>
+        <input type="text" class="form-control mb-2" name="last_name" placeholder="Last name" required>
+        <input type="tel" class="form-control mb-2" name="phone" placeholder="Phone" required>
+        <input type="email" class="form-control" name="email" placeholder="Email (optional)">
+      </div>
+
+      <!-- Job details -->
+      <div class="col-md-6">
+        <h5>Job details</h5>
+        <select class="form-select mb-2" name="job_type" required>
+          <option value="">Job type</option>
+          <option value="Installation">Installation</option>
+          <option value="Repair">Repair</option>
+          <option value="Maintenance">Maintenance</option>
+          <option value="Consultation">Consultation</option>
+        </select>
+        <select class="form-select mb-2" name="job_source">
+          <option value="">Job source</option>
+          <option value="Website">Website</option>
+          <option value="Phone">Phone</option>
+          <option value="Referral">Referral</option>
+          <option value="Social Media">Social Media</option>
+        </select>
+        <textarea class="form-control" name="job_description" placeholder="Job description (optional)"></textarea>
+      </div>
+
+      <!-- Service location -->
+      <div class="col-md-6">
+        <h5>Service location</h5>
+        <input type="text" class="form-control mb-2" name="address" placeholder="Address" required>
+        <input type="text" class="form-control mb-2" name="city" placeholder="City" required>
+        <input type="text" class="form-control mb-2" name="state" placeholder="State">
+        <div class="row">
+          <div class="col-6">
+            <input type="text" class="form-control" name="zip_code" placeholder="Zip code">
+          </div>
+          <div class="col-6">
+            <select class="form-select" name="area">
+              <option value="">Area</option>
+              <option value="North">North</option>
+              <option value="South">South</option>
+              <option value="East">East</option>
+              <option value="West">West</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scheduled -->
+      <div class="col-md-6">
+        <h5>Scheduled</h5>
+        <input type="date" class="form-control mb-2" name="start_date" required>
+        <div class="row mb-2">
+          <div class="col-6">
+            <input type="time" class="form-control" name="start_time" placeholder="Start time">
+          </div>
+          <div class="col-6">
+            <input type="time" class="form-control" name="end_time" placeholder="End time">
+          </div>
+        </div>
+        <small class="text-muted">Время окончания должно быть позже времени начала</small>
+        <select class="form-select" name="test_select">
+          <option value="">Test select</option>
+          <option value="option1">Option 1</option>
+        </select>
+      </div>
+
+    </div>
+
+    <div class="mt-3">
+      <button type="submit" class="btn btn-primary">Save Job</button>
+      <small class="text-muted d-block mt-2">* Кастомные поля создаются автоматически</small>
+    </div>
+  </form>
+
+  <script>
+document.getElementById('jobForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const formData = new FormData(this);
+  const data = Object.fromEntries(formData.entries());
+
+  const apiToken = "c40a439d34337a700705c1f1b902ffeb83ee2297";
+
+  try {
+    // Сначала получаем список доступных полей для сделок
+    console.log('Получаем список полей для сделок...');
+    let fieldsRes = await fetch(`https://api.pipedrive.com/v1/dealFields?api_token=${apiToken}`);
+    let fieldsResult = await fieldsRes.json();
+    console.log('Доступные поля для сделок:', fieldsResult);
+
+    // Проверяем и создаем недостающие кастомные поля автоматически
+    const requiredFields = [
+      { name: "Job Type", key: "job_type", field_type: "enum", options: ["Installation", "Repair", "Maintenance", "Consultation"] },
+      { name: "Job Source", key: "job_source", field_type: "enum", options: ["Website", "Phone", "Referral", "Social Media"] },
+      { name: "Job Description", key: "job_description", field_type: "text" },
+      { name: "Service Address", key: "service_address", field_type: "text" },
+      { name: "Service City", key: "service_city", field_type: "text" },
+      { name: "Service State", key: "service_state", field_type: "text" },
+      { name: "Service Zip Code", key: "service_zip_code", field_type: "text" },
+      { name: "Service Area", key: "service_area", field_type: "enum", options: ["North", "South", "East", "West"] },
+      { name: "Service Start Date", key: "service_start_date", field_type: "date" },
+      { name: "Service Start Time", key: "service_start_time", field_type: "time" },
+      { name: "Service End Time", key: "service_end_time", field_type: "time" }
+    ];
+
+    // Проверяем какие поля уже существуют
+    const existingFields = fieldsResult.success ? fieldsResult.data.map(f => f.name.toLowerCase()) : [];
+    
+    // Создаем недостающие поля
+    for (const field of requiredFields) {
+      if (!existingFields.includes(field.name.toLowerCase())) {
+        console.log(`Создаем поле: ${field.name}`);
+        try {
+          const fieldPayload = {
+            name: field.name,
+            field_type: field.field_type
+          };
+          
+          if (field.options) {
+            fieldPayload.options = field.options.map(opt => ({ label: opt }));
+          }
+
+          let createFieldRes = await fetch(`https://api.pipedrive.com/v1/dealFields?api_token=${apiToken}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(fieldPayload)
+          });
+          
+          let createFieldResult = await createFieldRes.json();
+          if (createFieldResult.success) {
+            console.log(`✅ Создано поле: ${field.name}`);
+          } else {
+            console.log(`⚠️ Не удалось создать поле ${field.name}:`, createFieldResult.error);
+          }
+        } catch (err) {
+          console.error(`Ошибка создания поля ${field.name}:`, err);
+        }
+      } else {
+        console.log(`✅ Поле уже существует: ${field.name}`);
+      }
+    }
+
+    // Получаем обновленный список полей после создания
+    let updatedFieldsRes = await fetch(`https://api.pipedrive.com/v1/dealFields?api_token=${apiToken}`);
+    let updatedFieldsResult = await updatedFieldsRes.json();
+
+    // 1. Создаём контакт
+    let personRes = await fetch(`https://api.pipedrive.com/v1/persons?api_token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: `${data.first_name} ${data.last_name}`,
+        phone: data.phone,
+        email: data.email
+      })
+    });
+
+    let personResult = await personRes.json();
+    if (!personResult.success) {
+      throw new Error('Ошибка создания контакта');
+    }
+    let personId = personResult.data.id;
+
+    // 2. Создаём сделку и пытаемся добавить данные в Details через стандартные поля
+    let dealPayload = {
+      title: `${data.first_name} ${data.last_name} - ${data.job_type || 'Сервис'}`,
+      person_id: personId,
+      value: 0,
+      currency: "USD",
+      status: "open"
+    };
+
+    // Попробуем добавить данные в стандартные поля, которые отображаются в Details
+    if (data.start_date) {
+      dealPayload.expected_close_date = data.start_date; // Ожидаемая дата закрытия
+    }
+
+    let dealRes = await fetch(`https://api.pipedrive.com/v1/deals?api_token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dealPayload)
+    });
+
+    let dealResult = await dealRes.json();
+    console.log('Deal API Response:', dealResult);
+    
+    if (dealResult.success) {
+      const dealId = dealResult.data.id;
+      
+      // 3. Создаем кастомные поля через API или используем существующие
+      console.log('Обновляем сделку с кастомными полями...');
+      
+      // Попробуем обновить сделку с кастомными полями
+      const customFieldsUpdate = {};
+      
+      // Стандартный способ добавления кастомных полей в Pipedrive
+      // Формат: числовой ID поля в виде строки или хэш ключ
+      if (updatedFieldsResult.success && updatedFieldsResult.data) {
+        updatedFieldsResult.data.forEach(field => {
+          // Проверяем, что field и field.id существуют
+          if (!field || !field.key) {
+            return; // Пропускаем поля без ключа
+          }
+          
+          const fieldKey = field.key;
+          const fieldName = field.name ? field.name.toLowerCase() : '';
+          
+          // Используем хэш ключи для более надежного обновления
+          if (fieldName.includes('job type') || fieldKey.includes('job_type')) {
+            customFieldsUpdate[fieldKey] = data.job_type;
+          }
+          if (fieldName.includes('job source') || fieldKey.includes('job_source')) {
+            customFieldsUpdate[fieldKey] = data.job_source;
+          }
+          if (fieldName.includes('job description') || fieldKey.includes('description')) {
+            customFieldsUpdate[fieldKey] = data.job_description;
+          }
+          if (fieldName.includes('service address') || fieldKey.includes('address')) {
+            customFieldsUpdate[fieldKey] = data.address;
+          }
+          if (fieldName.includes('service city') || fieldKey.includes('city')) {
+            customFieldsUpdate[fieldKey] = data.city;
+          }
+          if (fieldName.includes('service state') || fieldKey.includes('state')) {
+            customFieldsUpdate[fieldKey] = data.state;
+          }
+          if (fieldName.includes('zip code') || fieldKey.includes('zip')) {
+            customFieldsUpdate[fieldKey] = data.zip_code;
+          }
+          if (fieldName.includes('service area') || fieldKey.includes('area')) {
+            customFieldsUpdate[fieldKey] = data.area;
+          }
+          if (fieldName.includes('start date') || fieldKey.includes('start_date')) {
+            customFieldsUpdate[fieldKey] = data.start_date;
+          }
+          if (fieldName.includes('start time') || fieldKey.includes('start_time')) {
+            customFieldsUpdate[fieldKey] = data.start_time;
+          }
+          if (fieldName.includes('end time') || fieldKey.includes('end_time')) {
+            customFieldsUpdate[fieldKey] = data.end_time;
+          }
+        });
+      }
+
+      if (Object.keys(customFieldsUpdate).length > 0) {
+        console.log('Обновляем кастомные поля:', customFieldsUpdate);
+        let customUpdateRes = await fetch(`https://api.pipedrive.com/v1/deals/${dealId}?api_token=${apiToken}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(customFieldsUpdate)
+        });
+        
+        let customUpdateResult = await customUpdateRes.json();
+        console.log('Custom fields update result:', customUpdateResult);
+      }
+
+      alert(`✅ Сделка создана успешно!\nID: ${dealResult.data.id}\nКонтакт: ${data.first_name} ${data.last_name}\n\n📋 Все данные сохранены в секции Details.\n🔧 Кастомные поля созданы автоматически (если требовалось).`);
+      
+      // Очищаем форму
+      document.getElementById('jobForm').reset();
+    } else {
+      console.error('Детали ошибки создания сделки:', dealResult);
+      throw new Error(`Ошибка создания сделки: ${dealResult.error || JSON.stringify(dealResult.error_info || dealResult)}`);
+    }
+
+  } catch (err) {
+    console.error('Подробная ошибка:', err);
+    alert(`Произошла ошибка: ${err.message}`);
+  }
+});
+
+  </script>
+
+</body>
+</html>
