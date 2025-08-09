@@ -3,18 +3,6 @@ const $ = (sel, ctx=document) => ctx.querySelector(sel);
 const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
 const parseTime = t => { if(!t) return null; const [h,m]=t.split(':').map(Number); return h*60+m; };
 const formatTime = mins => `${String(Math.floor(mins/60)).padStart(2,'0')}:${String(mins%60).padStart(2,'0')}`;
-function setStatus(msg, type='info') {
-  const box = $('#statusMessage');
-  if(!box) return;
-  box.className = '';
-  const map = { info:'text-secondary', success:'text-success', error:'text-danger', warning:'text-warning'};
-  box.classList.add(map[type]||map.info);
-  box.textContent = msg;
-}
-function toggleLoading(on){
-  const sp = $('#loadingSpinner');
-  if(!sp) return; if(on) sp.classList.remove('d-none'); else sp.classList.add('d-none');
-}
 // Modal helpers
 function showLoadingModal(title='Processing', message='Please wait...'){
   const modal = $('#loadingModal');
@@ -130,8 +118,6 @@ function validateTimeRange(start, end){
 
 document.getElementById('jobForm').addEventListener('submit', async function(e){
   e.preventDefault();
-  setStatus('Отправка...', 'info');
-  toggleLoading(true);
   showLoadingModal('Processing','Creating deal...');
 
   const formData = new FormData(this);
@@ -191,15 +177,12 @@ document.getElementById('jobForm').addEventListener('submit', async function(e){
       if(!updJson.success) console.warn('Не все кастомные поля обновлены', updJson);
     }
 
-  setStatus(`Сделка #${dealId} создана успешно`, 'success');
   showSuccessModal(`Deal #${dealId} created successfully`);
     this.reset();
   } catch(err){
     console.error(err);
-  setStatus(err.message || 'Неизвестная ошибка', 'error');
   showErrorModal(err.message || 'Error');
   } finally {
-    toggleLoading(false);
   }
 });
 
