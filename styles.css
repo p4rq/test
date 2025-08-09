@@ -1,0 +1,169 @@
+ /* Iframe optimization styles */
+    body {
+      margin: 0;
+      padding: 1rem;
+      min-height: 100vh;
+      background: #f8f9fa;
+    }
+    
+    /* Responsive iframe adjustments */
+    @media (max-width: 768px) {
+      body { padding: 0.5rem; }
+      .container-fluid { padding: 0; }
+    }
+    
+    /* Remove scrollbars in iframe */
+    .iframe-embedded {
+      overflow: hidden;
+      height: 100vh;
+    }
+    
+    /* Mobile Time Picker Styles */
+    .time-picker-input {
+      width: 100%;
+      padding: 0.375rem 0.75rem;
+      border: 1px solid #ced4da;
+      border-radius: 0.375rem;
+      background: white;
+      cursor: pointer;
+      font-size: 16px;
+      text-align: center;
+      user-select: none;
+      transition: all 0.15s ease-in-out;
+      position: relative;
+    }
+    
+    .time-picker-input:hover {
+      border-color: #80bdff;
+      background: #f8f9fa;
+    }
+    
+    .time-picker-input:focus {
+      border-color: #80bdff;
+      outline: 0;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    /* Inline Time Picker Dropdown */
+    .time-picker-container {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+    
+    .time-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      display: none;
+      margin-top: 4px;
+      max-height: 200px;
+      overflow: hidden;
+    }
+    
+    .time-dropdown.show {
+      display: block;
+      animation: dropDown 0.2s ease-out;
+    }
+    
+    @keyframes dropDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .time-wheels-inline {
+      display: flex;
+      height: 120px;
+      padding: 8px;
+      gap: 8px;
+    }
+    
+    .wheel-inline {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .wheel-label-small {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    
+    .time-wheel-small {
+      width: 60px;
+      height: 100px;
+      overflow: hidden;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      position: relative;
+      background: white;
+      cursor: grab;
+    }
+    
+    .time-wheel-small:active {
+      cursor: grabbing;
+    }
+    
+    .wheel-items-small {
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease;
+      padding: 35px 0;
+    }
+    
+    .wheel-item-small {
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: #666;
+    }
+    
+    .wheel-item-small.active {
+      color: #007bff;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .wheel-selection-zone-small {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 20px;
+      transform: translateY(-50%);
+      background: rgba(0, 123, 255, 0.05);
+      border: 1px solid rgba(0, 123, 255, 0.2);
+      border-left: none;
+      border-right: none;
+      pointer-events: none;
+    }
+    
+    /* Responsive behavior */
+    @media (max-width: 768px) {
+      .time-dropdown {
+        position: static;
+        box-shadow: none;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        margin-top: 8px;
+      }
+    }
